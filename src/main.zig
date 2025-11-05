@@ -2,7 +2,7 @@ const std = @import("std");
 const config = @import("config.zig");
 const commands = @import("commands.zig");
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

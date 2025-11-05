@@ -392,7 +392,7 @@ pub fn env(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const config_source = try config_mod.getConfigSource(allocator);
     defer allocator.free(config_source);
 
-    try print(allocator, "Version: 0.1.0\n", .{});
+    try print(allocator, "Version: 0.2.0\n", .{});
     try print(allocator, "Config: {s}\n", .{config_source});
     try print(allocator, "Repository: {s}\n", .{cfg.repo});
 

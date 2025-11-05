@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 REPO="DockYard/skill"
 BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 

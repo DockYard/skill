@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-05
+
 ### Security
 - Fixed race condition in temp directory creation by using cryptographically random names instead of timestamps
 - Fixed symlink attack vulnerability by skipping symlinks during file copy operations
@@ -66,5 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error messages to stderr, success messages to stdout
 - Non-zero exit codes on errors
 
-[unreleased]: https://github.com/DockYard/skill/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/DockYard/skill/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/DockYard/skill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DockYard/skill/releases/tag/v0.1.0

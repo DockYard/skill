@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 RELEASE_DIR="release/v${VERSION}"
 
 echo "Building skill v${VERSION} for multiple platforms..."
