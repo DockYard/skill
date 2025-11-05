@@ -16,15 +16,9 @@ pub fn checkGitInstalled(allocator: std.mem.Allocator) !void {
 pub fn listSkills(allocator: std.mem.Allocator, cfg: config.Config) ![][]const u8 {
     try checkGitInstalled(allocator);
 
-    // Create temp directory
-    const tmp_base = std.posix.getenv("TMPDIR") orelse std.posix.getenv("TEMP") orelse "/tmp";
-    const temp_name = try std.fmt.allocPrint(allocator, "skill-{d}", .{std.time.milliTimestamp()});
-    defer allocator.free(temp_name);
-
-    const temp_dir_path = try std.fs.path.join(allocator, &[_][]const u8{ tmp_base, temp_name });
+    // Create secure temp directory with cryptographic random name
+    const temp_dir_path = try createSecureTempDir(allocator);
     defer allocator.free(temp_dir_path);
-
-    try std.fs.makeDirAbsolute(temp_dir_path);
     defer std.fs.deleteDirAbsolute(temp_dir_path) catch {};
 
     // Initialize git repo
@@ -98,15 +92,9 @@ pub fn listSkills(allocator: std.mem.Allocator, cfg: config.Config) ![][]const u
 pub fn fetchSkill(allocator: std.mem.Allocator, cfg: config.Config, skill_name: []const u8, dest_path: []const u8) !void {
     try checkGitInstalled(allocator);
 
-    // Create temp directory
-    const tmp_base = std.posix.getenv("TMPDIR") orelse std.posix.getenv("TEMP") orelse "/tmp";
-    const temp_name = try std.fmt.allocPrint(allocator, "skill-{d}", .{std.time.milliTimestamp()});
-    defer allocator.free(temp_name);
-
-    const temp_dir_path = try std.fs.path.join(allocator, &[_][]const u8{ tmp_base, temp_name });
+    // Create secure temp directory with cryptographic random name
+    const temp_dir_path = try createSecureTempDir(allocator);
     defer allocator.free(temp_dir_path);
-
-    try std.fs.makeDirAbsolute(temp_dir_path);
     defer std.fs.deleteDirAbsolute(temp_dir_path) catch {};
 
     // Initialize git repo
@@ -196,6 +184,14 @@ fn copyDirectory(allocator: std.mem.Allocator, source: []const u8, dest: []const
 
     var iter = source_dir.iterate();
     while (try iter.next()) |entry| {
+        // Security: Skip symlinks to prevent symlink attacks
+        if (entry.kind == .sym_link) {
+            const msg = try std.fmt.allocPrint(allocator, "Warning: Skipping symlink: {s}\n", .{entry.name});
+            defer allocator.free(msg);
+            try std.fs.File.stderr().writeAll(msg);
+            continue;
+        }
+
         if (entry.kind == .directory) {
             const sub_source = try std.fs.path.join(allocator, &[_][]const u8{ source, entry.name });
             defer allocator.free(sub_source);
@@ -206,4 +202,31 @@ fn copyDirectory(allocator: std.mem.Allocator, source: []const u8, dest: []const
             try source_dir.copyFile(entry.name, dest_dir, entry.name, .{});
         }
     }
+}
+
+fn createSecureTempDir(allocator: std.mem.Allocator) ![]const u8 {
+    const tmp_base = std.posix.getenv("TMPDIR") orelse std.posix.getenv("TEMP") orelse "/tmp";
+
+    // Use cryptographically random name to prevent race conditions
+    var random_bytes: [16]u8 = undefined;
+    std.crypto.random.bytes(&random_bytes);
+
+    // Convert to hex string
+    var hex_buf: [32]u8 = undefined;
+    const hex_string = std.fmt.bytesToHex(&random_bytes, .lower);
+    @memcpy(hex_buf[0..32], &hex_string);
+
+    const random_name = try std.fmt.allocPrint(allocator, "skill-{s}", .{hex_buf[0..32]});
+    defer allocator.free(random_name);
+
+    const temp_dir_path = try std.fs.path.join(allocator, &[_][]const u8{ tmp_base, random_name });
+    errdefer allocator.free(temp_dir_path);
+
+    // Create directory - fails if already exists (prevents race condition)
+    std.fs.makeDirAbsolute(temp_dir_path) catch |err| {
+        allocator.free(temp_dir_path);
+        return err;
+    };
+
+    return temp_dir_path;
 }

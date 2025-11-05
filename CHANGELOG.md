@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Fixed race condition in temp directory creation by using cryptographically random names instead of timestamps
+- Fixed symlink attack vulnerability by skipping symlinks during file copy operations
+- Added warning when symlinks are encountered in skills
+
 ## [0.1.0] - 2024-11-05
 
 ### Added
